@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>Potoi Potoi Potoi</title>
+  <style>
+    /* Reset margin/padding */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    html, body {
+      height: 100%;
+      background-color: #3bb371;
+      font-family: Arial, sans-serif;
+      overflow: hidden; /* evitar scroll */
+    }
+    body, #app {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      width: 100vw;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    /* Contenedor principal se adapta tamaño imagen menu */
+    #app {
+      position: relative;
+      background-color: #3bb371;
+      border-radius: 12px;
+      overflow: hidden;
+      /* Fondo del menú con fond1.png sin filtro verde */
+      background-image: url('Images/fond1.png');
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center;
+      /* tamaño fijo para ajustarse siempre en pantalla sin scroll */
+      max-width: 800px;
+      width: 100%;
+      max-height: 600px;
+      height: 100%;
+    }
+    canvas {
+      background-color: transparent; /* transparente porque fondo es #app */
+      display: block;
+      /* Tamaño fijo del canvas igual al tamaño CANVAS_WIDTH / HEIGHT */
+      width: 800px;
+      height: 600px;
+    }
+
+    /* Menu overlay con filtro semitransparente eliminamos filtro verde para transparencia */
+    #menu, #modalities, #credits {
+      position: absolute;
+      top:0; left:0; right:0; bottom:0;
+      background-color: rgba(59, 179, 113, 0); /* filtro verde muy sutil para que se vea fondo */
+      color: rgb(255, 255, 255);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      padding: 15px;
+      z-index: 50;
+      backdrop-filter: none;
+    }
+    #gameOverOverlay {
+      position: absolute;
+      top:0; left:0; right:0; bottom:0;
+      background-color: rgba(255, 255, 255, 0); /* fondo blanquezino restaurado con transparencia */
+      color: black;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align:center;
+      padding: 15px;
+      z-index: 150;
+      font-size: 24px;
+      font-weight: bold;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    #gameOverOverlay.visible {
+      display: flex;
+      opacity: 1;
+    }
+    #menu button, #modalities button, #gameOverOverlay button {
+      font-size: 14px;
+      width: 90%;
+      max-width: 320px;
+      margin: 8px 0;
+      padding: 12px 0;
+      border: none;
+      border-radius: 8px;
+      color: white;
+      background-color: #2a8f57;
+      cursor: pointer;
+      user-select: none;
+      font-family: Arial, sans-serif;
+      font-weight: bold;
+      transition: background-color 0.25s ease;
+    }
+    #menu button:hover,
+    #modalities button:hover,
+    #gameOverOverlay button:hover {
+      filter: brightness(85%);
+    }
+    #menu button.exit, #gameOverOverlay button.exit {
+      background-color: #2a8f57;
+    }
+    #menu button.play, #modalities button.difficulty {
+      background-color: #2a8f57;
+    }
+    #modalities button.back {
+      background-color: #ce985f;
+      color: white;
+      font-weight: normal;
+    }
+    /* El boton volver de credits con mismo estilo que del menu dificultades */
+    #credits button.back {
+      font-size: 14px;
+      width: 90%;
+      background-color: #ce985f;
+      max-width: 320px;
+      margin: 8px 0;
+      padding: 12px 0;
+      border: none;
+      border-radius: 8px;
+      color: white;
+      cursor: pointer;
+      user-select: none;
+      font-family: Arial, sans-serif;
+      font-weight: bold;
+      transition: background-color 0.25s ease;
+    }
+    #credits button.back:hover {
+      filter: brightness(85%);
+    }
+    /* Dividir creditos en dos columnas con 8 y 8 */
+    #credits {
+      overflow-y: auto;
+      font-weight: normal;
+      color: white;
+    }
+    #credits h2 {
+      text-align: center;
+      margin-bottom: 10px;
+    }
+    #credits .columns {
+      display: flex;
+      justify-content: center;
+      gap: 40px;
+    }
+    #credits .column {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      font-size: 14px;
+      user-select: text;
+    }
+    #score {
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 20px;
+      color: black;
+      font-weight: bold;
+      text-shadow: 0 0 3px white;
+      z-index: 45;
+    }
+    #btn-back {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      width: 30px;
+      height: 30px;
+      font-size: 22px;
+      background-color: #ce985f;
+      border: none;
+      border-radius: 6px;
+      color: white;
+      cursor: pointer;
+      z-index: 45;
+      user-select: none;
+      line-height: 30px;
+      text-align: center;
+      display: none; /* por defecto oculto */
+    }
+    #btn-back:active {
+      background-color: #2a8f57;
+    }
+
+    /* Joystick styles */
+    #joystick {
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+      width: 110px;
+      height: 110px;
+      background-color: rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+      touch-action: none;
+      -webkit-user-select: none;
+      user-select: none;
+      z-index: 200;
+      display: none; /* por defecto oculto */
+      justify-content: center;
+      align-items: center;
+    }
+    #joystick-inner {
+      width: 60px;
+      height: 60px;
+      background-color: rgba(42, 143, 87, 0.9);
+      border-radius: 50%;
+      position: relative;
+      transition: transform 0.1s ease;
+      touch-action: none;
+      -webkit-user-select: none;
+      user-select: none;
+      box-shadow: inset 0 0 6px rgba(0,0,0,0.4);
+    }
+  </style>
+</head>
+<body>
+<div id="app" role="main" aria-label="Jeu Potoi Potoi Potoi">
+  <canvas id="gameCanvas" aria-label="Jeu Potoi Potoi Potoi" role="img" tabindex="0"></canvas>
+
+  <!-- Joystick -->
+  <div id="joystick" aria-label="Joystick virtual" role="application" tabindex="0" aria-live="polite">
+    <div id="joystick-inner"></div>
+  </div>
+
+  <div id="score" style="display:none;" aria-live="polite" aria-atomic="true">Élèves qui restent : 50</div>
+  <button id="btn-back" title="Retour">⮨</button>
+
+  <div id="menu" role="dialog" aria-modal="true" aria-label="Menu principal">
+    <button class="play" id="playBtn">Jouer</button>
+    <button id="creditsBtn">Crédits</button>
+    <button class="exit" id="exitBtn">Sortir</button>
+  </div>
+
+  <div id="modalities" style="display:none;" role="dialog" aria-modal="true" aria-label="Sélection de la difficulté">
+    <h3>Sélectionnez la difficulté</h3>
+    <button class="difficulty" data-difficulty="facile">Facile</button>
+    <button class="difficulty" data-difficulty="normal">Normal</button>
+    <button class="difficulty" data-difficulty="difficile">Difficile</button>
+    <button class="back" id="backFromModalities">Retour</button>
+  </div>
+
+  <div id="credits" style="display:none;" role="dialog" aria-modal="true" aria-label="Crédits">
+    <h2>Crédits</h2>
+    <div class="columns" aria-label="Liste des noms des contributeurs">
+      <div class="column" aria-label="Colonne 1">
+        <p>M Genty</p>
+        <p>Armel</p>
+        <p>Matheo</p>
+        <p>Louis</p>
+        <p>Thomas</p>
+        <p>Natan</p>
+        <p>Arthur</p>
+        <p>Jules</p>
+      </div>
+      <div class="column" aria-label="Colonne 2">
+        <p>Aaron</p>
+        <p>Djibril</p>
+        <p>Owen</p>
+        <p>Noa</p>
+        <p>Emanuel</p>
+        <p>Isabella</p>
+        <p>Angelina FC</p>
+        <p>Google</p>
+      </div>
+    </div>
+    <button class="back" id="backFromCredits">Retour</button>
+  </div>
+
+  <div id="gameOverOverlay">
+    <h3 id="gameOverMessage" style="margin-bottom: 20px;"></h3>
+    <button id="exitGameOver" class="exit">Sortir</button>
+  </div>
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById("gameCanvas");
+  const ctx = canvas.getContext("2d");
+  const scoreEl = document.getElementById("score");
+  const btnBack = document.getElementById("btn-back");
+  const menu = document.getElementById("menu");
+  const modalities = document.getElementById("modalities");
+  const credits = document.getElementById("credits");
+  const gameOverOverlay = document.getElementById("gameOverOverlay");
+  const gameOverMessageEl = document.getElementById("gameOverMessage");
+  const exitGameOverBtn = document.getElementById("exitGameOver");
+  const backFromCreditsBtn = document.getElementById("backFromCredits");
+  const joystick = document.getElementById("joystick");
+  const joystickInner = document.getElementById("joystick-inner");
+
+  // Variables para la imagen de fondo fond1.png para obtener su tamaño natural
+  let menuBackground = new Image();
+  menuBackground.src = "Images/fond1.png";
+
+  // Establecemos las dimensiones del juego como constantes (800x600)
+  const CANVAS_WIDTH = 800;
+  const CANVAS_HEIGHT = 600;
+
+  // Variables del juego
+  let difficulty = null;
+  let gameRunning = false;
+  let alumnosRestantes = 50;
+  let alumnos = [];
+  let alumnoRebeldeObj = null;
+  let inspector = {
+    active: false,
+    visible: false,
+    text: "",
+    img: null,
+  };
+  let profesor = {
+    x: 400,
+    y: 300,
+    width: 50,
+    height: 50,
+    imgNormal: new Image(),
+    imgAlt: new Image(),
+    currentImg: null,
+    speed: 1.2, // velocidad aumentada a 1.2
+  };
+  let keysPressed = {};
+  let gameOver = false;
+
+  // Sonidos
+  let sounds = {
+    music: null,
+    hum: null,
+    risas: null,
+    suspiro: null,
+    dodinTracks: [],
+    dodinAudio: null,
+    lossSounds: [
+      "Music/Dodin/Oh no.mp3",
+      "Music/Dodin/Trahison.mp3",
+      "Music/Dodin/No way.mp3",
+      "Music/Dodin/OH NO NO NO NO NO.mp3",
+      "Music/Dodin/ARSHHHHHHHHHH.mp3",
+      "Music/Dodin/POTOI POTOI POTOI.mp3",
+      "Music/Dodin/POTAAAAA.mp3"
+    ],
+    lossSoundNames: [
+      "Oh no",
+      "Trahison",
+      "No way",
+      "OH NO NO NO NO NO",
+      "ARSHHHHHHHHHH",
+      "POTOI POTOI POTOI",
+      "POTAAAAA"
+    ]
+  };
+
+  // Fondo de juego (fond.png)
+  let bgImage = new Image();
+
+  // Velocidad del alumno rebelde aumentada 1.2
+  const BEBE_SPEED = 0.5;
+
+  const alumnosNombres = [
+    "Armel", "Matheo", "Louis", "Thomas", "Natan", "Arthur",
+    "Jules", "Aaron", "Djibril", "Owen", "Noa", "Emanuel", "Isabella"
+  ];
+
+  const alumnoImagesPaths = alumnosNombres.map(nombre => "Images/Eleves/" + nombre + ".png");
+  const alumnoPlaceholderDataURI = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiBmaWxsPSIjZTFkOGU3Ii8+PC9zdmc+";
+
+  function loadImageSafe(src) {
+    return new Promise(resolve => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = () => {
+        const placeholder = new Image();
+        placeholder.onload = () => resolve(placeholder);
+        placeholder.src = alumnoPlaceholderDataURI;
+      };
+      img.src = src;
+    });
+  }
+
+  async function loadAssets() {
+    const toLoad = [];
+
+    toLoad.push(new Promise(resolve => {
+      bgImage.onload = () => resolve();
+      bgImage.onerror = () => resolve();
+      bgImage.src = "Images/fond.png";
+    }));
+
+    toLoad.push(new Promise(resolve => {
+      profesor.imgNormal.onload = () => resolve();
+      profesor.imgNormal.onerror = () => {
+        profesor.imgNormal.src = alumnoPlaceholderDataURI;
+        resolve();
+      };
+      profesor.imgNormal.src = "Images/profesor.png";
+    }));
+
+    toLoad.push(new Promise(resolve => {
+      profesor.imgAlt.onload = () => resolve();
+      profesor.imgAlt.onerror = () => {
+        profesor.imgAlt.src = alumnoPlaceholderDataURI;
+        resolve();
+      };
+      profesor.imgAlt.src = "Images/profesor1.png";
+    }));
+
+    toLoad.push(new Promise(resolve => {
+      let rebeldeImg = new Image();
+      rebeldeImg.onload = () => {
+        alumnoRebeldeImage = rebeldeImg;
+        resolve();
+      };
+      rebeldeImg.onerror = () => {
+        const placeholder = new Image();
+        placeholder.onload = () => {
+          alumnoRebeldeImage = placeholder;
+          resolve();
+        };
+        placeholder.src = alumnoPlaceholderDataURI;
+      }
+      rebeldeImg.src = "Images/bebe.png";
+    }));
+
+    toLoad.push(new Promise(resolve => {
+      inspector.img = new Image();
+      inspector.img.onload = () => resolve();
+      inspector.img.onerror = () => {
+        inspector.img.src = alumnoPlaceholderDataURI;
+        resolve();
+      };
+      inspector.img.src = "Images/inspector.png";
+    }));
+
+    alumnoImages = [];
+    for (const path of alumnoImagesPaths) {
+      toLoad.push(loadImageSafe(path).then(img => alumnoImages.push(img)));
+    }
+
+    sounds.music = new Audio("Music/musica.mp3");
+    sounds.music.loop = true;
+    sounds.music.volume = 0.4;
+    sounds.hum = new Audio("Music/hum.mp3");
+    sounds.risas = new Audio("Music/risas.mp3");
+    sounds.suspiro = new Audio("Music/suspiro.mp3");
+
+    return Promise.all(toLoad);
+  }
+
+  function setProfesorImage(direction) {
+    if (direction === "left") profesor.currentImg = profesor.imgAlt;
+    else profesor.currentImg = profesor.imgNormal;
+  }
+
+  let alumnoImages = [];
+  let alumnoRebeldeImage = null;
+
+  function generateAlumnos(cantidad) {
+    alumnos = [];
+    for (let i = 0; i < cantidad; i++) {
+      let x = Math.random() * (CANVAS_WIDTH - 40);
+      let y = Math.random() * (CANVAS_HEIGHT - 40);
+      let img = alumnoImages[i % alumnoImages.length] || new Image();
+      alumnos.push({ x, y, width: 40, height: 40, image: img });
+    }
+    alumnosRestantes = cantidad;
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+    if (bgImage.complete && bgImage.naturalWidth !== 0) {
+      ctx.drawImage(bgImage, 0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+    } else {
+      ctx.fillStyle = "#3bb371";
+      ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+    }
+    alumnos.forEach(alumno => {
+      if (alumno.image.complete && alumno.image.naturalWidth !== 0) {
+        ctx.drawImage(alumno.image, alumno.x, alumno.y, alumno.width, alumno.height);
+      } else {
+        ctx.fillStyle = "#e1d8e7";
+        ctx.fillRect(alumno.x, alumno.y, alumno.width, alumno.height);
+      }
+    });
+    if ((difficulty === "normal" || difficulty === "difficile") && alumnoRebeldeObj) {
+      if (alumnoRebeldeObj.image.complete && alumnoRebeldeObj.image.naturalWidth !== 0) {
+        ctx.drawImage(alumnoRebeldeObj.image, alumnoRebeldeObj.x, alumnoRebeldeObj.y, alumnoRebeldeObj.width, alumnoRebeldeObj.height);
+      } else {
+        ctx.fillStyle = "#f00";
+        ctx.fillRect(alumnoRebeldeObj.x, alumnoRebeldeObj.y, alumnoRebeldeObj.width, alumnoRebeldeObj.height);
+      }
+    }
+    if (profesor.currentImg && profesor.currentImg.complete && profesor.currentImg.naturalWidth !== 0) {
+      ctx.drawImage(profesor.currentImg, profesor.x, profesor.y, profesor.width, profesor.height);
+    } else {
+      ctx.fillStyle = "#000";
+      ctx.fillRect(profesor.x, profesor.y, profesor.width, profesor.height);
+    }
+    if (difficulty === "difficile" && inspector.visible && inspector.img && inspector.img.complete && inspector.img.naturalWidth !== 0) {
+      ctx.drawImage(inspector.img, 10, CANVAS_HEIGHT - 102 - 10, 80, 102);
+    }
+  }
+
+  function moveAlumnoRebelde() {
+    if (!alumnoRebeldeObj || gameOver || !["normal", "difficile"].includes(difficulty)) return;
+
+    const px = profesor.x;
+    const py = profesor.y;
+    let rx = alumnoRebeldeObj.x;
+    let ry = alumnoRebeldeObj.y;
+
+    let dx = 0, dy = 0;
+    if (px > rx) dx = BEBE_SPEED;
+    else if (px < rx) dx = -BEBE_SPEED;
+    if (py > ry) dy = BEBE_SPEED;
+    else if (py < ry) dy = -BEBE_SPEED;
+
+    alumnoRebeldeObj.x += dx;
+    alumnoRebeldeObj.y += dy;
+
+    alumnoRebeldeObj.x = Math.min(Math.max(0, alumnoRebeldeObj.x), CANVAS_WIDTH - alumnoRebeldeObj.width);
+    alumnoRebeldeObj.y = Math.min(Math.max(0, alumnoRebeldeObj.y), CANVAS_HEIGHT - alumnoRebeldeObj.height);
+
+    if (detectCollision(profesor, alumnoRebeldeObj)) {
+      terminarJuego({ perdiste: true, trahison: false });
+    }
+  }
+
+  function detectCollision(a, b) {
+    return a.x < b.x + b.width &&
+      a.x + a.width > b.x &&
+      a.y < b.y + b.height &&
+      a.y + a.height > b.y;
+  }
+
+  function moveAlumnos() {
+    if(gameOver) return;
+    for(let alumno of alumnos){
+      let dx=[-5,0,5][Math.floor(Math.random()*3)];
+      let dy=[-5,0,5][Math.floor(Math.random()*3)];
+      alumno.x+=dx;
+      alumno.y+=dy;
+      alumno.x=Math.min(Math.max(0, alumno.x), CANVAS_WIDTH - alumno.width);
+      alumno.y=Math.min(Math.max(0, alumno.y), CANVAS_HEIGHT - alumno.height);
+    }
+  }
+
+  function updateProfesorPosition() {
+    if(gameOver) return;
+    let dx = 0, dy = 0;
+    if(keysPressed["ArrowUp"]) dy -= profesor.speed;
+    if(keysPressed["ArrowDown"]) dy += profesor.speed;
+    if(keysPressed["ArrowLeft"]) dx -= profesor.speed;
+    if(keysPressed["ArrowRight"]) dx += profesor.speed;
+
+    let newX = profesor.x + dx;
+    let newY = profesor.y + dy;
+
+    if(newX >= 0 && newX <= CANVAS_WIDTH - profesor.width) {
+      profesor.x = newX;
+      if(dx < 0) setProfesorImage("left");
+      else if(dx > 0) setProfesorImage("normal");
+    }
+    if(newY >= 0 && newY <= CANVAS_HEIGHT - profesor.height) profesor.y = newY;
+  }
+
+  function verifyColisionsWithAlumnos() {
+    if(gameOver) return;
+    for(let i = alumnos.length - 1; i >= 0; i--){
+      if(detectCollision(profesor, alumnos[i])){
+        if(difficulty === "difficile" && inspector.visible){
+          terminarJuego({ perdiste: true, trahison: true });
+          return;
+        }
+        alumnos.splice(i,1);
+        alumnosRestantes--;
+        updateScoreText();
+        if(sounds.hum){
+          sounds.hum.currentTime = 0;
+          sounds.hum.play();
+        }
+      }
+    }
+    if(alumnosRestantes <= 0) terminarJuego();
+  }
+
+  function inspectorLogic() {
+    if(gameOver || difficulty !== "difficile") return;
+    if(!inspector.active && Math.floor(Math.random() * 10) === 6){
+      inspector.active = true;
+      inspector.text = "J'écoute des pas dans les couloirs...";
+      setTimeout(() => inspector.text = "", 1500);
+      setTimeout(() => {
+        inspector.visible = true;
+        setTimeout(() => {
+          inspector.visible = false;
+          inspector.active = false;
+        }, 2000);
+      }, 1000);
+    }
+  }
+
+  function drawInspectorText() {
+    if(inspector.text){
+      ctx.save();
+      ctx.font = "20px Arial";
+      ctx.fillStyle = "red";
+      ctx.textAlign = "center";
+      ctx.fillText(inspector.text, CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2);
+      ctx.restore();
+    }
+  }
+
+  function updateScoreText() {
+    scoreEl.textContent = "Élèves qui restent : " + alumnosRestantes;
+  }
+
+  function terminarJuego(params) {
+    console.log("terminarJuego called with params:", params);
+    var perdiste = params && params.perdiste || false;
+    var trahison = params && params.trahison || false;
+    gameOver = true;
+    gameRunning = false;
+    sounds.music.pause();
+    if (sounds.dodinAudio) {
+      sounds.dodinAudio.pause();
+      sounds.dodinAudio = null;
+    }
+    animarAlumnosFelices();
+
+    if (typeof showCreditsFromGameOverBtn !== "undefined" && showCreditsFromGameOverBtn) showCreditsFromGameOverBtn.style.display = "none";
+
+    var message = "";
+    if (trahison) {
+      if (sounds.lossSounds.length > 0) {
+        var trackIndex = Math.floor(Math.random() * sounds.lossSounds.length);
+        var trackUrl = sounds.lossSounds[trackIndex];
+        var trackName = sounds.lossSoundNames[trackIndex] || "Trahison";
+        var lossSound = new Audio(trackUrl);
+        lossSound.play();
+        message = trackName + " !";
+      } else {
+        message = "Trahison !";
+      }
+    } else if (perdiste) {
+      message = "T'as perdu :(";
+      if (sounds.risas) {
+        sounds.risas.currentTime = 0;
+        sounds.risas.play();
+      }
+    } else {
+      message = "Finalement silence...";
+      if (sounds.suspiro) {
+        sounds.suspiro.currentTime = 0;
+        sounds.suspiro.play();
+      }
+    }
+    showGameOver(message);
+  }
+
+  function animarAlumnosFelices(){
+    // Placeholder para animaciones
+  }
+
+  function showGameOver(message){
+    console.log("showGameOver called with message:", message);
+    gameOverMessageEl.textContent = message;
+    gameOverOverlay.classList.add("visible");
+    scoreEl.style.display = "none";
+    btnBack.style.display = "block";
+    joystick.style.display = "none";
+  }
+
+  function hideGameOver(){
+    gameOverOverlay.classList.remove("visible");
+  }
+
+  function volverAlMenu(){
+    console.log("volverAlMenu called");
+    gameRunning = false;
+    gameOver = false;
+    alumnosRestantes = 50;
+    alumnos = [];
+    alumnoRebeldeObj = null;
+    inspector.active = false;
+    inspector.visible = false;
+    inspector.text = "";
+    sounds.music.pause();
+    if(sounds.dodinAudio){
+      sounds.dodinAudio.pause();
+      sounds.dodinAudio = null;
+    }
+    hideGameOver();
+    scoreEl.style.display = "none";
+    btnBack.style.display = "none";
+    modalities.style.display = "none";
+    credits.style.display = "none";
+    menu.style.display = "flex";
+    joystick.style.display = "none";
+
+    // Restablecer fondo menú
+    const appDiv = document.getElementById("app");
+    appDiv.style.backgroundImage = "url('Images/fond1.png')";
+    appDiv.style.backgroundSize = "contain";
+
+    // Limpiar canvas para que no quede imagen del juego
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    if (typeof showCreditsFromGameOverBtn !== "undefined" && showCreditsFromGameOverBtn) showCreditsFromGameOverBtn.style.display = "inline-block";
+  }
+
+  function iniciarJuego(difi){
+    console.log("iniciarJuego called with difficulty:", difi);
+    difficulty = difi;
+    gameRunning = true;
+    alumnosRestantes = 50;
+    updateScoreText();
+    scoreEl.style.display = "block";
+    btnBack.style.display = "block";
+    menu.style.display = "none";
+    modalities.style.display = "none";
+    credits.style.display = "none";
+    hideGameOver();
+    joystick.style.display = "flex";
+
+    const appDiv = document.getElementById("app");
+    appDiv.style.backgroundImage = "url('Images/fond.png')";
+    appDiv.style.backgroundSize = "cover";
+
+    canvas.width = CANVAS_WIDTH;
+    canvas.height = CANVAS_HEIGHT;
+
+    profesor.x = CANVAS_WIDTH / 2;
+    profesor.y = CANVAS_HEIGHT / 2;
+    profesor.currentImg = profesor.imgNormal;
+
+    generateAlumnos(alumnosRestantes);
+
+    if (difficulty === "normal" || difficulty === "difficile"){
+      alumnoRebeldeObj = {
+        x: 750,
+        y: 50,
+        width: 50,
+        height: 50,
+        image: alumnoRebeldeImage || new Image()
+      };
+    } else alumnoRebeldeObj = null;
+
+    sounds.music.currentTime = 0;
+    sounds.music.play();
+
+    loop();
+    inspectorLoop();
+    alumnosMoverLoop();
+    rebeldeMoverLoop();
+  }
+
+  function loop(){
+    if (!gameRunning) return;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    updateProfesorPosition();
+    verifyColisionsWithAlumnos();
+    moveAlumnoRebelde();
+    draw();
+    drawInspectorText();
+
+    requestAnimationFrame(loop);
+  }
+
+  function inspectorLoop(){
+    if (!gameRunning) return;
+    inspectorLogic();
+    setTimeout(inspectorLoop, 900);
+  }
+
+  function alumnosMoverLoop(){
+    if (!gameRunning) return;
+    moveAlumnos();
+    setTimeout(alumnosMoverLoop, 100);
+  }
+
+  function rebeldeMoverLoop(){
+    if (!gameRunning) return;
+    moveAlumnoRebelde();
+    setTimeout(rebeldeMoverLoop, 100);
+  }
+
+  // Eventos teclado para soporte normal
+  window.addEventListener("keydown", e => keysPressed[e.key] = true);
+  window.addEventListener("keyup", e => keysPressed[e.key] = false);
+
+  // Joystick touch handling
+  let joystickActive = false;
+  let joystickCenter = { x: 0, y: 0 };
+
+  joystick.addEventListener("touchstart", (e) => {
+    e.preventDefault();
+    joystickActive = true;
+    const rect = joystick.getBoundingClientRect();
+    joystickCenter.x = rect.left + rect.width / 2;
+    joystickCenter.y = rect.top + rect.height / 2;
+    joystickInner.style.transition = "transform 0.1s ease";
+  }, {passive: false});
+
+  joystick.addEventListener("touchmove", (e) => {
+    e.preventDefault();
+    if (!joystickActive) return;
+
+    const touch = e.touches[0];
+    const deltaX = touch.clientX - joystickCenter.x;
+    const deltaY = touch.clientY - joystickCenter.y;
+
+    const maxDistance = 40; // radio máximo joystick
+
+    let dx = deltaX;
+    let dy = deltaY;
+
+    // limitar movimiento al círculo
+    const dist = Math.sqrt(dx*dx + dy*dy);
+    if (dist > maxDistance) {
+      const angle = Math.atan2(dy, dx);
+      dx = Math.cos(angle) * maxDistance;
+      dy = Math.sin(angle) * maxDistance;
+    }
+
+    // Actualizar teclas simuladas para movimiento
+    keysPressed["ArrowUp"] = dy < -10;
+    keysPressed["ArrowDown"] = dy > 10;
+    keysPressed["ArrowLeft"] = dx < -10;
+    keysPressed["ArrowRight"] = dx > 10;
+
+    joystickInner.style.transform = `translate(${dx}px, ${dy}px)`;
+  }, {passive: false});
+
+  joystick.addEventListener("touchend", (e) => {
+    e.preventDefault();
+    joystickActive = false;
+    keysPressed["ArrowUp"] = false;
+    keysPressed["ArrowDown"] = false;
+    keysPressed["ArrowLeft"] = false;
+    keysPressed["ArrowRight"] = false;
+    joystickInner.style.transition = "transform 0.2s ease";
+    joystickInner.style.transform = "translate(0, 0)";
+  }, {passive: false});
+
+  // Botones UI
+  document.getElementById("playBtn").onclick = () => { menu.style.display = "none"; modalities.style.display = "flex"; };
+  document.getElementById("creditsBtn").onclick = () => { menu.style.display = "none"; credits.style.display = "flex"; };
+  document.getElementById("exitBtn").onclick = () => { alert("Merci d'avoir joué! Fermez l'onglet."); };
+  document.getElementById("backFromModalities").onclick = () => { modalities.style.display = "none"; menu.style.display = "flex"; };
+  backFromCreditsBtn.onclick = () => { credits.style.display = "none"; menu.style.display = "flex"; };
+  btnBack.onclick = () => { 
+    if(gameRunning) sounds.music.pause(); 
+    volverAlMenu(); 
+  };
+  exitGameOverBtn.onclick = () => { volverAlMenu(); };
+
+  document.querySelectorAll("#modalities button.difficulty").forEach(btn =>{
+    btn.addEventListener("click", e => {
+      iniciarJuego(e.target.dataset.difficulty);
+    });
+  });
+
+  loadAssets().then(() => {
+    profesor.currentImg = profesor.imgNormal;
+    menu.style.display = "flex";
+    joystick.style.display = "none"; // asegurar joystick oculto al cargar
+  }).catch(err => {
+    alert("Erreur de chargement des ressources: " + err.message);
+    menu.style.display = "flex";
+  });
+})();
+</script>
+</body>
+</html>
+
