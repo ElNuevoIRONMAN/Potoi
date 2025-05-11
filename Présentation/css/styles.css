@@ -1,0 +1,119 @@
+@font-face {
+    font-family: 'Adamu';
+    src: url('Adumu.ttf') format('truetype');
+}
+
+body {
+    font-family: 'Adamu', Arial, sans-serif;
+    color: white;
+    margin: 0;
+    padding: 0;
+    background-image: url("fond.png");
+    background-size: cover;
+    background-repeat: no-repeat;
+    letter-spacing: 0.05em;
+}
+
+.no-underline {
+    text-decoration: none;
+}
+
+header {
+    background-color: #306247c9;
+    color: white;
+    padding: 10px 0;
+    text-align: center;
+}
+
+nav ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+nav ul li {
+    display: inline;
+    margin: 0 15px;
+}
+
+nav ul li a {
+    color: white;
+    text-decoration: none;
+}
+
+main {
+    padding: 20px;
+}
+
+footer {
+    text-align: center;
+    padding: 10px 0;
+    background-color: #306247c9;
+    color: white;
+    position: relative;
+    bottom: 0;
+    width: 100%;
+}
+
+::-webkit-scrollbar {
+    width: 10px;
+}
+
+::-webkit-scrollbar-track {
+background: #306247;
+}
+
+::-webkit-scrollbar-thumb {
+background: #3bb371d7;
+border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+background: #297f50;
+}
+
+section {
+    background-color: #3bb37196;
+    border-radius: 10px;     
+    padding: 20px;           
+    margin: 20px auto;        
+    max-width: 900px;          
+}
+
+section img {
+    border-radius: 8px;
+    max-width: 100%;
+    display: block;
+    margin: 10px auto;
+}
+
+.credit-list {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    align-items: center;
+    margin-top: 30px;
+}
+
+.credit-item {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    background-color: #0e893bc8;
+    padding: 15px 25px;
+    border-radius: 12px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    width: 80%;
+    max-width: 500px;
+}
+
+.credit-item img {
+    width: 70px;
+    height: 100%;
+    object-fit: cover;
+}
+
+.credit-item p {
+    margin: 0;
+    font-size: 1.2em;
+    font-weight: bold;
+}
