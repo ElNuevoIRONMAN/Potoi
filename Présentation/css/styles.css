@@ -9,8 +9,9 @@ body {
     margin: 0;
     padding: 0;
     background-image: url("fond.png");
-    background-size: cover;
+    background-size: absolute;
     background-repeat: no-repeat;
+    background-attachment: fixed;
     letter-spacing: 0.05em;
 }
 
