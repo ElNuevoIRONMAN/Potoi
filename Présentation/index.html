@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>𝑷𝒐𝒕𝒐𝒊 𝒑𝒐𝒕𝒐𝒊 𝒑𝒐𝒕𝒐𝒊</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="icon" href="css/icono.ico" type="image/x-icon">
+</head>
+<body>
+    <header>
+        <nav>
+            <ul>
+                <li><a href="pages/communaute.html">Communauté</a></li>
+                <li><a href="../main.html" target="_blank">Jouer online</a></li>
+                <li><a href="pages/download.html">Télécharger</a></li>
+                <li><a href="pages/credits.html">Crédits</a></li>
+            </ul>
+        </nav>
+        <a href="index.html">
+            <img src="css/title.png" alt="POTOI POTOI POTOI" id="title-image" class="no-underline" img="50%">
+        </a>
+    </header>
+    <div id="side-menu">
+  <ul>
+    <li><button onclick="showSlide('about')">Origine</button></li>
+    <li><button onclick="showSlide('structure')">Objectifs</button></li>
+    <li><button onclick="showSlide('interface')">Organisation</button></li>
+    <li><button onclick="showSlide('navigation')">Niveaux</button></li>
+    <li><button onclick="showSlide('deplacement')">Fonctions</button></li>
+    <li><button onclick="showSlide('interaction')">Limites</button></li>
+    <li><button onclick="showSlide('sons')">Répartition</button></li>
+    <li><button onclick="showSlide('design')">Avis</button></li>
+  </ul>
+</div>
+
+    <main>
+    <section id="about">
+        <h2>Origine de l'idée :</h2>
+        <p>L'idée de POTOI est née d'une classe où les élèves bavardaient beaucoup...</p>
+        <img src="images/1.jpg" alt="YIPII!!">
+    </section>
+
+    <section id="structure">
+    <h2>Objectifs :</h2>
+        <div class="contenu">
+            <ul>
+            <li>Dévelun jeu en python avec Tkinter</li>
+            <li>Déplacement des personnages</li>
+            <li>Collisions</li>
+            <li>Victoire vs défaite</li>
+            </ul>
+            <img src="images/2.png" alt="bebé">
+        </div>
+    </section>
+
+    <section id="interface">
+        <h2>Organisation du jeu :</h2>
+        <div>
+            <h3>Trois buttons :</h3>
+            <ul>
+                <li>Jouer</li>
+                <li>Crédits</li>
+                <li>Sortir</li>
+            </ul>
+        </div>
+        <img src="images/menu.png" alt="menu">
+        <img src="images/credits.png" alt="credits">
+    </section>
+
+    <section id="navigation">
+        <h2>Modalités :</h2>
+        <img src="images/schema.png" alt="Schéma">
+    </section>
+
+    <section id="deplacement">
+        <h2>Foncionnalités attendues :</h2>
+        <ul>
+            <li>Géneration d'ennemis</li>
+            <li>Mouvement des personnages</li>
+            <li>Buttons sortir et crédits</li>
+            <li>Compteur</li>
+            <li>Fuite des élèves du professeur</li>
+        </ul>
+        <pre>
+Début 
+    Définir afficher_crédits :
+       Créer une nouvelle fenêtre secondaire liée à la fenêtre principale
+       Définir le titre de la fenêtre comme "Crédits"
+       Dire la taille de la fenêtre à 200x450 pixels
+       Redimensionnement de la fenêtre désactivé
+
+       Créer une liste de noms :
+        ["M Genty", "Armel", "Matheo", "Louis", "Thomas", "Natan", "Arthur", "Jules",
+        "Aaron", "Djibril", "Owen", "Noa", "Emanuel", "Isabella", "Angelina FC", "Google"]
+
+       Pour chaque nom dans la liste de noms :
+        Afficher une étiquette avec le nom (police Arial, taille 12) dans la fenêtre
+Fin
+</pre>
+    </section>
+
+    <section id="interaction">
+        <h2>Contraintes :</h2>
+        <ul>
+            <li>Bugs</li>
+            <li>Manque des connaissances</li>
+            <li>Librairies</li>
+            <li>Collisions</li>
+            <li>Vitesse de rendu</li>
+        </ul>
+        <img src="images/BUG.jpg" alt="Bug">
+    </section>
+
+    <section id="sons">
+    <h2>Répartition des tâches :</h2>
+        <div class="conteneur-listes">
+            <div class="liste">
+                <p><strong>Isabella :</strong></p>
+                <ul>
+                    <li>Interface</li>
+                    <li>Compteur</li>
+                    <li>Mouvement professeur</li>
+                    <li>Pillow</li>
+                    <li>Inspecteur</li>
+                </ul>
+            </div>
+            <div class="liste">
+                <p><strong>Emanuel :</strong></p>
+                <ul>
+                    <li>Mouvement élèves</li>
+                    <li>Collisions</li>
+                    <li>Musique</li>
+                    <li>Os</li>
+                    <li>Touches</li>
+                    <li>Bebé</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <section id="design">
+        <h2>Notre opinion :</h2>
+        <p>Magnifique et pas sus</p>
+        <img src="https://i.pinimg.com/originals/96/b5/1d/96b51d3bb8104d88b94951a74d4009dd.gif" alt="XD">
+    </section>
+</main>
+
+    <footer>
+        <p>&copy; 2025 Potoi Group. Tous droits réservés</p>
+    </footer>
+
+<script>
+  function showSlide(id) {
+    document.querySelectorAll("main section").forEach(section => {
+      section.classList.remove("active");
+    });
+
+    const target = document.getElementById(id);
+    if (target) {
+      target.classList.add("active");
+    }
+
+    document.querySelectorAll("#side-menu button").forEach(btn => {
+      btn.classList.remove("active");
+    });
+    const activeBtn = Array.from(document.querySelectorAll("#side-menu button"))
+      .find(btn => btn.onclick && btn.onclick.toString().includes(id));
+    if (activeBtn) {
+      activeBtn.classList.add("active");
+    }
+  }
+
+  window.addEventListener("DOMContentLoaded", () => {
+    showSlide('about'); 
+  });
+</script>
+
+</body>
+</html>
